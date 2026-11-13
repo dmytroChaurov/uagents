@@ -5,7 +5,7 @@ def run_agent():
     print("Инициализация тестового агента...")
     
     # Намеренная ошибка для краш-теста: опечатка в вызове библиотеки (reqests вместо requests)
-    response = reqests.get("https://jsonplaceholder.typicode.com/todos/1") 
+    response = requests.get("https://jsonplaceholder.typicode.com/todos/1") 
     
     if response.status_code == 200:
         data = response.json()
