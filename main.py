@@ -1,25 +1,30 @@
-import requests
-import os
 import time
+from duckduckgo_search import DDGS
 
-def run_agent():
-    print("Инициализация тестового агента...")
+def run_researcher(topic):
+    print(f"🕵️‍♂️ Агент-ресерчер запущен. Тема: '{topic}'\n")
+    print("Ищу информацию в сети...")
     
-    # Правильный вызов requests
-    response = requests.get("https://jsonplaceholder.typicode.com/todos/1") 
-    
-    if response.status_code == 200:
-        data = response.json()
-        print(f"API ответ: {data.get('title')}")
-    
-    test_secret = os.environ.get("TEST_SECRET_KEY", "Ключ не передан")
-    print(f"Переменные окружения: {test_secret}")
+    try:
+        # Используем DuckDuckGo для анонимного поиска без API-ключей
+        results = DDGS().text(topic, max_results=5)
+        
+        print("\n=== РЕЗУЛЬТАТЫ ИССЛЕДОВАНИЯ ===")
+        for i, res in enumerate(results, 1):
+            print(f"\n{i}. {res.get('title')}")
+            print(f"🔗 Ссылка: {res.get('href')}")
+            print(f"📝 Описание: {res.get('body')}")
+        print("\n===============================")
+        
+    except Exception as e:
+        print(f"❌ Ошибка во время поиска: {e}")
 
 if __name__ == "__main__":
-    run_agent()
+    # Запускаем агента с тестовой темой (учитывая, что сейчас 2026 год)
+    run_researcher("AI agents frameworks trends 2026")
     
-    print("Агент выполнил задачу. Переход в режим ожидания (чтобы процесс не считался упавшим)...")
+    print("\nИсследование завершено. Агент переходит в фоновый режим ожидания...")
     
-    # Искусственно поддерживаем жизнь процесса
+    # Бесконечный цикл, чтобы uagents8 не считал завершение скрипта ошибкой (Startup Failed)
     while True:
         time.sleep(60)
