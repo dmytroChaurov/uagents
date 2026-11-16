@@ -1,5 +1,5 @@
 import time
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 
 def run_researcher(topic):
     print(f"🕵️‍♂️ Агент-ресерчер запущен. Тема: '{topic}'\n")
