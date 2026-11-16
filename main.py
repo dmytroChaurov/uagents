@@ -1,43 +1,52 @@
-import time
+import os
 import requests
-import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-# Заглушка для платформы
-class HealthCheckHandler(BaseHTTPRequestHandler):
+class WebParserHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        # Отправляем платформе и браузеру статус 200 (Всё ОК)
         self.send_response(200)
-        self.send_header("Content-type", "text/plain")
+        self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
-        self.wfile.write(b"OK")
-    def log_message(self, format, *args):
-        pass
+        
+        try:
+            # Идем в интернет за случайным фактом о котах (публичный и очень быстрый API)
+            api_response = requests.get("https://catfact.ninja/fact", timeout=5)
+            
+            if api_response.status_code == 200:
+                fact = api_response.json().get("fact", "Факт не найден")
+            else:
+                fact = "Не удалось получить данные с сайта."
 
-def start_server():
-    server_address = ('0.0.0.0', 8000)
-    httpd = HTTPServer(server_address, HealthCheckHandler)
+            # Формируем HTML-страничку с результатом
+            html_content = f"""
+            <html>
+            <body style="font-family: Arial, sans-serif; padding: 40px; text-align: center;">
+                <h2>Привет! Я ваш тестовый ИИ-агент 🤖</h2>
+                <p>Я только что сходил в интернет и принес вам случайный факт:</p>
+                <div style="background: #f0f0f0; padding: 20px; border-radius: 10px; display: inline-block; max-width: 600px;">
+                    <strong>{fact}</strong>
+                </div>
+                <p><small>Обновите страницу, чтобы я скачал новый факт!</small></p>
+            </body>
+            </html>
+            """
+        except Exception as e:
+            html_content = f"<h1>Произошла ошибка при походе в интернет: {e}</h1>"
+            
+        # Отправляем HTML в браузер
+        self.wfile.write(html_content.encode('utf-8'))
+
+    def log_message(self, format, *args):
+        pass # Отключаем лишний спам в терминале
+
+def run():
+    port = int(os.environ.get("PORT", 8000))
+    print(f"🚀 Агент запущен на порту {port}. Жду запросов...")
+    
+    server_address = ('0.0.0.0', port)
+    httpd = HTTPServer(server_address, WebParserHandler)
     httpd.serve_forever()
 
-def run_hacker_news_agent():
-    print("🕵️‍♂️ Ищу свежие ИТ-новости...\n")
-    try:
-        response = requests.get("https://hacker-news.firebaseio.com/v0/topstories.json", timeout=10)
-        if response.status_code == 200:
-            story_ids = response.json()[:5]
-            for i, story_id in enumerate(story_ids, 1):
-                story_data = requests.get(f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json", timeout=10).json()
-                print(f"{i}. {story_data.get('title')}\n🔗 {story_data.get('url', 'Нет ссылки')}\n")
-    except Exception as e:
-        print(f"❌ Ошибка: {e}")
-
 if __name__ == "__main__":
-    # 1. Мгновенно запускаем сервер в фоне, чтобы uagents8 был доволен
-    threading.Thread(target=start_server, daemon=True).start()
-    print("Сервер запущен. Платформа должна подтвердить статус Running.")
-    
-    # 2. Выполняем нашу основную задачу
-    run_hacker_news_agent()
-    
-    # 3. Держим процесс активным
-    while True:
-        time.sleep(60)
+    run()
