@@ -1,1 +1,1 @@
-requests
+duckduckgo-search
