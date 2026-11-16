@@ -1,30 +1,38 @@
 import time
-from ddgs import DDGS
+import requests
 
-def run_researcher(topic):
-    print(f"🕵️‍♂️ Агент-ресерчер запущен. Тема: '{topic}'\n")
-    print("Ищу информацию в сети...")
+def run_hacker_news_agent():
+    print("🕵️‍♂️ Агент-ресерчер запущен. Ищу свежие ИТ-новости (Hacker News)...\n")
     
     try:
-        # Используем DuckDuckGo для анонимного поиска без API-ключей
-        results = DDGS().text(topic, max_results=5)
+        # Получаем ID лучших статей
+        top_stories_url = "https://hacker-news.firebaseio.com/v0/topstories.json"
+        response = requests.get(top_stories_url, timeout=10)
         
-        print("\n=== РЕЗУЛЬТАТЫ ИССЛЕДОВАНИЯ ===")
-        for i, res in enumerate(results, 1):
-            print(f"\n{i}. {res.get('title')}")
-            print(f"🔗 Ссылка: {res.get('href')}")
-            print(f"📝 Описание: {res.get('body')}")
-        print("\n===============================")
+        if response.status_code != 200:
+            print("❌ Ошибка доступа к API Hacker News")
+            return
+            
+        story_ids = response.json()[:5]  # Берем топ-5 новостей
+        
+        print("=== ТОП-5 НОВОСТЕЙ НА HACKER NEWS ===")
+        for i, story_id in enumerate(story_ids, 1):
+            story_url = f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
+            story_data = requests.get(story_url, timeout=10).json()
+            
+            title = story_data.get("title", "Без заголовка")
+            url = story_data.get("url", "Нет ссылки (только текст)")
+            
+            print(f"\n{i}. {title}")
+            print(f"🔗 Ссылка: {url}")
+        print("\n=====================================")
         
     except Exception as e:
-        print(f"❌ Ошибка во время поиска: {e}")
+        print(f"❌ Ошибка во время получения данных: {e}")
 
 if __name__ == "__main__":
-    # Запускаем агента с тестовой темой (учитывая, что сейчас 2026 год)
-    run_researcher("AI agents frameworks trends 2026")
+    run_hacker_news_agent()
     
-    print("\nИсследование завершено. Агент переходит в фоновый режим ожидания...")
-    
-    # Бесконечный цикл, чтобы uagents8 не считал завершение скрипта ошибкой (Startup Failed)
+    print("\nСбор новостей завершен. Агент переходит в фоновый режим ожидания...")
     while True:
         time.sleep(60)
